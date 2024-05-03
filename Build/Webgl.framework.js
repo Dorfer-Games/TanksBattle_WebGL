@@ -8,12 +8,20 @@ function(unityFramework) {
 
 var Module=typeof unityFramework!="undefined"?unityFramework:{};var readyPromiseResolve,readyPromiseReject;Module["ready"]=new Promise(function(resolve,reject){readyPromiseResolve=resolve;readyPromiseReject=reject});Object.defineProperty(Module, "asmLibraryArg", {
 	set: function (value) {
-		value._JS_UNETWebSockets_SocketCreate = function (hostId, urlPtr) {
-			var url = Pointer_stringify(urlPtr).replace(/^ws:\/\//, "wss://");
-			urlPtr = Runtime.stackAlloc((url.length << 2) + 1);
-			stringToUTF8(url, urlPtr, (url.length << 2) + 1);
-			return _JS_UNETWebSockets_SocketCreate(hostId, urlPtr);
-		};
+		value._js_html_utpWebSocketCreate = function (sockId, addrData, addrSize) {
+			console.log("sockId:", sockId);
+            console.log("addrData:", addrData);
+            console.log("addrSize:", addrSize);
+            var addr = (new TextDecoder).decode(HEAPU8.subarray(addrData, addrData + addrSize));
+            var sock = new WebSocket(addr);
+            sock.binaryType = "arraybuffer";
+            sock.utpMessageQueue = [];
+            sock.addEventListener("message", function(e) {
+                var data8 = new Uint8Array(e.data);
+                sock.utpMessageQueue.push(data8);
+            });
+            GlobalData.ws[sockId] = sock;
+        };
 		Module._asmLibraryArg = value;
 	},
 	get: function () {
